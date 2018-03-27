@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEditor;
 namespace HMDEyeTracking {
-    [ExecuteInEditMode]
+    //[ExecuteInEditMode]
     public class GazeReplayer : MonoBehaviour
     {
         #region Constants
@@ -46,7 +46,9 @@ namespace HMDEyeTracking {
         [Range(0, 1)]
         public float gazePointSpeed;
 
-        [Header("2D Visualizer Settings")]
+        [Header("Plane Visualizer Settings")]
+        [Tooltip("Whether to show the plane visualization.")]
+        public bool showPlaneVisualization = true;
         [Tooltip("Determines the size of the 2D gaze visualization in the scene view")]
         public Rect size;
         #endregion
@@ -66,6 +68,10 @@ namespace HMDEyeTracking {
         private Utils.GazeData currentData;
         //Reference to the data loader with the list of gaze points.
         private GazeDataLoader dataLoader;
+        //Reference to the gaze plane visualizer.
+        private GazePlaneVisualizer gazePlaneVisualizer;
+        //The bool deciding whether the plane visualization is shown. Private to prevent users from changing it during runtime.
+        private bool showingPlaneVisualization;
         //Whether the replayer was successfully initialized
         private bool initialized;
         #endregion
@@ -99,6 +105,7 @@ namespace HMDEyeTracking {
             {
                 UpdateGazeData();
                 UpdateGazeReplayPoint();
+                gazePlaneVisualizer.UpdatePlaneGazePoint(currentData);
                 UpdateGazeIndex();
             }
             else
@@ -214,6 +221,8 @@ namespace HMDEyeTracking {
             currentData = dataLoader.GetGazeData(0);
             if (currentData == null) return false;
             gazeStartTime = currentData.timestamp;
+            gazePlaneVisualizer = GetComponent<GazePlaneVisualizer>();
+            if (showingPlaneVisualization && gazePlaneVisualizer == null) showingPlaneVisualization = false;
             return true;
         }
 
@@ -301,22 +310,25 @@ namespace HMDEyeTracking {
     public class GazeReplayerEditor : Editor
     {
         private float realTime = 0;
-        private bool show2DVisualization;
 
         #region Unity methods
         private void OnEnable()
         {
-            show2DVisualization = true;
         }
 
         private void OnSceneGUI()
         {
+            float replayTime = 0;
+
             if (GazeReplayer.instance != null)
             {
                 if (GazeReplayer.instance.IsReplaying())
-                  realTime = GazeReplayer.instance.GetRealTime();
+                {
+                    realTime = GazeReplayer.instance.GetRealTime();
+                    replayTime = GazeReplayer.instance.GetReplayTime();
+                }
             }
-            float replayTime = GazeReplayer.instance.GetReplayTime();
+            
 
             Handles.BeginGUI();
             GUILayout.BeginArea(GazeReplayer.instance.size);
@@ -339,7 +351,7 @@ namespace HMDEyeTracking {
 
 
 
-            if (show2DVisualization)
+            if (GazeReplayer.instance.showPlaneVisualization)
             {
                 GUIContent content = new GUIContent();
                 content.image = GazeReplayer.instance.gazePointView;

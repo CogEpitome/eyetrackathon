@@ -16,6 +16,10 @@ namespace HMDEyeTracking {
     /// <summary>
     /// Stores the data output of a VR Eyetracker in a local data XML file.
     /// Based on example code by Tobii AB.
+    /// 
+    /// IMPORTANT NOTICE: the recorder will continuosly empty the Gaze Data queue of the VREyeTracker.
+    /// If you need to use that data elsewhere, remove all instances of "eyeTracker.NextData" in the Update method
+    /// and create a separate script to store them before passing them here.
     /// </summary>
     public class GazeRecorder : MonoBehaviour
     {
