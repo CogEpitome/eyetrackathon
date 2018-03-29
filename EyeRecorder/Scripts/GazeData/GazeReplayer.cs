@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEditor;
 namespace HMDEyeTracking {
-    //[ExecuteInEditMode]
+    [ExecuteInEditMode]
     public class GazeReplayer : MonoBehaviour
     {
         #region Constants
@@ -101,8 +101,13 @@ namespace HMDEyeTracking {
 
         private void Update()
         {
-            if (initialized)
+            if (initialized || !EditorApplication.isPlaying)
             {
+                if(currentData == null)
+                {
+                    initialized = false;
+                    return;
+                }
                 UpdateGazeData();
                 UpdateGazeReplayPoint();
                 gazePlaneVisualizer.UpdatePlaneGazePoint(currentData);
@@ -231,8 +236,8 @@ namespace HMDEyeTracking {
             //Check the amount of data points in the list
             int listCount = GazeDataLoader.instance.GetGazeData().Count;
             //Check the gaze index to ensure it is within the allowed range
-            if (gazeIndex < 0) gazeIndex = 0;
             if (gazeIndex >= listCount) gazeIndex = listCount - 1;
+            if (gazeIndex < 0) gazeIndex = 0; 
 
             if (listCount == 0)
             {
@@ -247,14 +252,17 @@ namespace HMDEyeTracking {
 
             if (gazeIndex < listCount)
             {
-                currentData = GazeDataLoader.instance.GetGazeData(gazeIndex);
+                Utils.GazeData newData = GazeDataLoader.instance.GetGazeData(gazeIndex);
+                if(newData != null)
+                    currentData = newData;
             }
         }
 
         //Updates the position of the gaze replay point
         private void UpdateGazeReplayPoint()
         {
-            
+            if (currentData != null)
+            {
                 if (currentData.valid)
                 {
                     targetPosition = currentData.origin + (currentData.direction * currentData.distance);
@@ -271,6 +279,7 @@ namespace HMDEyeTracking {
                     gazeReplayPoint.transform.localScale = Vector3.one * 0.1f * currentData.pupilsSize;
                 else
                     gazeReplayPoint.transform.localScale = Vector3.zero;
+            }
      
         }
 
@@ -284,8 +293,15 @@ namespace HMDEyeTracking {
                 }
             } else
             {
-                while (GetReplayTime(gazeIndex) < GetSumTime() + Time.time - GetResumeTime())
+                int whileKilla = 0;
+                while (GetReplayTime(gazeIndex) < GetSumTime() + Time.time - GetResumeTime() && gazeIndex < GazeDataLoader.instance.GetGazeData().Count)
                 {
+                    whileKilla++;
+                    if(whileKilla > 10000)
+                    {
+                        Debug.Log("While loop in GazeReplayer UpdateGazeIndex ran for flippin ever");
+                        return;
+                    }
                     gazeIndex++;
                 }
             }
@@ -327,6 +343,9 @@ namespace HMDEyeTracking {
                     realTime = GazeReplayer.instance.GetRealTime();
                     replayTime = GazeReplayer.instance.GetReplayTime();
                 }
+            } else
+            {
+                return;
             }
             
 

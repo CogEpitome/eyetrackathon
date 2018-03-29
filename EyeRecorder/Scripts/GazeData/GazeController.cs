@@ -59,9 +59,9 @@ namespace HMDEyeTracking
             instance = this;
         }
 
-        private void Start()
+        private void OnEnable()
         {
-            if(activate)
+            if(activate && !activated)
                 Activate();
         }
 
