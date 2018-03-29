@@ -67,13 +67,15 @@ namespace HMDEyeTracking {
         //The current gaze data.
         private Utils.GazeData currentData;
         //Reference to the data loader with the list of gaze points.
-        private GazeDataLoader dataLoader;
+        //private GazeDataLoader dataLoader;
         //Reference to the gaze plane visualizer.
         private GazePlaneVisualizer gazePlaneVisualizer;
         //The bool deciding whether the plane visualization is shown. Private to prevent users from changing it during runtime.
         private bool showingPlaneVisualization;
         //Whether the replayer was successfully initialized
         private bool initialized;
+        //Whether is replayer is enabled.
+        private bool enable;
         #endregion
 
         #region Unity methods
@@ -90,38 +92,74 @@ namespace HMDEyeTracking {
             initialized = Initialize();
         }
 
-        private void Awake()
-        {
-            initialized = false;
-            gazeIndex = 0;
-            resumeTime = 0;
-            gazeStartTime = 0;
-            targetPosition = Vector3.zero;
-        }
-
         private void Update()
         {
-            if (initialized || !EditorApplication.isPlaying)
+            if (enable)
             {
-                if(currentData == null)
+                if (initialized)
                 {
-                    initialized = false;
-                    return;
+                    if (currentData == null)
+                    {
+                        initialized = false;
+                        return;
+                    }
+                    UpdateGazeData();
+                    UpdateGazeReplayPoint();
+                    if (showingPlaneVisualization)
+                    {
+                        gazePlaneVisualizer.UpdatePlaneGazePoint(currentData);
+                    }
+                    UpdateGazeIndex();
                 }
-                UpdateGazeData();
-                UpdateGazeReplayPoint();
-                gazePlaneVisualizer.UpdatePlaneGazePoint(currentData);
-                UpdateGazeIndex();
-            }
-            else
-            {
-                initialized = Initialize();
+                else
+                {
+                    initialized = Initialize();
+                }
             }
         }
 
         #endregion
 
         #region Public methods
+        /// <summary>
+        /// Enable the replayer.
+        /// </summary>
+        public void Enable()
+        {
+            //Singleton
+            if (instance != null && instance != this)
+            {
+                enable = false;
+                return;
+            }
+            instance = this;
+
+            initialized = false;
+            gazeIndex = 0;
+            resumeTime = 0;
+            gazeStartTime = 0;
+            targetPosition = Vector3.zero;
+            enable = true;
+            Debug.Log("Replayer enabled");
+        }
+
+        /// <summary>
+        /// Disable the replayer.
+        /// </summary>
+        public void Disable()
+        {
+            enable = false;
+            Debug.Log("Replayer disabled");
+        }
+
+        /// <summary>
+        /// //Returns whether the replayer is enabled.
+        /// </summary>
+        public bool GetEnable()
+        {
+            return enable;
+        }
+
         /// <summary>
         /// Get the relative time signature of the current gaze point, i.e. how long afte recording began that the gaze point was created.
         /// </summary>
@@ -194,7 +232,7 @@ namespace HMDEyeTracking {
         {
             if (!isReplaying)
             {
-                if(gazeStartTime == 0) gazeStartTime = GazeDataLoader.instance.GetGazeData(0).timestamp;
+                if(gazeStartTime == 0) gazeStartTime = GazeDataLoader.GetGazeData(0).timestamp;
                 resumeTime = Time.time;
                 isReplaying = true;
                 Debug.Log("Started replay at t + "+ GetReplayTime() + "s");
@@ -221,10 +259,11 @@ namespace HMDEyeTracking {
         private bool Initialize()
         {
             isReplaying = false;
-            dataLoader = GazeDataLoader.instance;
-            if (dataLoader == null) return false;
-            currentData = dataLoader.GetGazeData(0);
-            if (currentData == null) return false;
+            currentData = GazeDataLoader.GetGazeData(0);
+            if (currentData == null)
+            {
+                return false;
+            }
             gazeStartTime = currentData.timestamp;
             gazePlaneVisualizer = GetComponent<GazePlaneVisualizer>();
             if (showingPlaneVisualization && gazePlaneVisualizer == null) showingPlaneVisualization = false;
@@ -234,7 +273,7 @@ namespace HMDEyeTracking {
         private void UpdateGazeData()
         {
             //Check the amount of data points in the list
-            int listCount = GazeDataLoader.instance.GetGazeData().Count;
+            int listCount = GazeDataLoader.GetGazeData().Count;
             //Check the gaze index to ensure it is within the allowed range
             if (gazeIndex >= listCount) gazeIndex = listCount - 1;
             if (gazeIndex < 0) gazeIndex = 0; 
@@ -246,13 +285,13 @@ namespace HMDEyeTracking {
             }
             else
             {
-                if (resumeTime == 0) resumeTime = GazeDataLoader.instance.GetGazeData(0).timestamp;
+                if (resumeTime == 0) resumeTime = GazeDataLoader.GetGazeData(0).timestamp;
                 gazeReplayPoint.gameObject.SetActive(true);
             }
 
             if (gazeIndex < listCount)
             {
-                Utils.GazeData newData = GazeDataLoader.instance.GetGazeData(gazeIndex);
+                Utils.GazeData newData = GazeDataLoader.GetGazeData(gazeIndex);
                 if(newData != null)
                     currentData = newData;
             }
@@ -294,7 +333,7 @@ namespace HMDEyeTracking {
             } else
             {
                 int whileKilla = 0;
-                while (GetReplayTime(gazeIndex) < GetSumTime() + Time.time - GetResumeTime() && gazeIndex < GazeDataLoader.instance.GetGazeData().Count)
+                while (GetReplayTime(gazeIndex) < GetSumTime() + Time.time - GetResumeTime() && gazeIndex < GazeDataLoader.GetGazeData().Count)
                 {
                     whileKilla++;
                     if(whileKilla > 10000)
@@ -309,7 +348,7 @@ namespace HMDEyeTracking {
 
         private float GetReplayTime(int index)
         {
-            Utils.GazeData data = dataLoader.GetGazeData(index);
+            Utils.GazeData data = GazeDataLoader.GetGazeData(index);
             float t = 0;
             if (data != null)
             {
@@ -335,14 +374,16 @@ namespace HMDEyeTracking {
         private void OnSceneGUI()
         {
             float replayTime = 0;
-
+            string objectString = "None";
             if (GazeReplayer.instance != null)
             {
                 if (GazeReplayer.instance.IsReplaying())
                 {
                     realTime = GazeReplayer.instance.GetRealTime();
                     replayTime = GazeReplayer.instance.GetReplayTime();
+                    
                 }
+                objectString = GazeReplayer.instance.GetCurrentData().objectName;
             } else
             {
                 return;
@@ -367,6 +408,7 @@ namespace HMDEyeTracking {
             
             GUILayout.Label("Replay Time: " + replayTime + "s");
             GUILayout.Label("Elapsed Time: " + realTime + "s");
+            GUILayout.Label("Object: " + objectString);
 
 
 

@@ -65,6 +65,8 @@ namespace HMDEyeTracking {
         private bool overwritten;
         //The last distance recorded.
         private float lastDistance;
+        //Whether the recorder has been enabled.
+        private bool enable;
         #endregion
 
         #region Unity methods
@@ -79,11 +81,60 @@ namespace HMDEyeTracking {
             instance = this;
         }
 
-        private void Start()
+        
+
+        private void Update()
+        {
+            if (enable)
+            {
+                //Only record data if the eyetracker is connected.
+                if (eyeTracker.Connected)
+                {
+                    if (!isRecording)
+                    {
+                        while (eyeTracker.GazeDataCount > 0)
+                        {
+                            //While not recording, empty the eyetracker queue.
+                            var discardData = eyeTracker.NextData;
+                        }
+                    }
+
+                    //If recording, save the recorded data to the data file.
+                    if (isRecording)
+                    {
+
+                        //Check if it is time to write to disk
+                        if (gazeDataBuffer.Count > MAX_BUFFER_SIZE)
+                        {
+                            //Write buffer to disk and empty list
+                            WriteGazeData();
+                        }
+                        else
+                        {
+                            while (eyeTracker.GazeDataCount > 0)
+                            {
+                                //While there is eye tracking data left in the eyetracker's data queue, add it to the list.
+                                EnqueueGazeData(eyeTracker.NextData);
+                            }
+                        }
+
+
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region Public methods
+        /// <summary>
+        /// Enable the recorder.
+        /// </summary>
+        public void Enable()
         {
             //Check if there is an eyetracker in the scene.
             eyeTracker = VREyeTracker.Instance;
-            if(eyeTracker == null)
+            if (eyeTracker == null)
             {
                 Debug.Log("The GazeRecorder could not find an instance of VREyeTracker in the scene. It is included in the Tobii Pro VR Unity SDK.");
                 Debug.Log("The GazeRecorder will now terminate");
@@ -94,51 +145,22 @@ namespace HMDEyeTracking {
             calibrated = false;
             lastDistance = 0f;
             gazeDataBuffer = new List<Utils.GazeData>();
+            enable = true;
+            Debug.Log("Recorder enabled");
         }
 
-        private void Update()
+        /// <summary>
+        /// Enable the recorder.
+        /// </summary>
+        public void Disable()
         {
-            
-            //Only record data if the eyetracker is connected.
-            if (eyeTracker.Connected)
-            {
-                if (!isRecording)
-                {
-                    while (eyeTracker.GazeDataCount > 0)
-                    {
-                        //While not recording, empty the eyetracker queue.
-                        var discardData = eyeTracker.NextData;
-                    }
-                }
-
-                //If recording, save the recorded data to the data file.
-                if (isRecording)
-                {
-
-                    //Check if it is time to write to disk
-                    if (gazeDataBuffer.Count > MAX_BUFFER_SIZE)
-                    {
-                        //Write buffer to disk and empty list
-                        WriteGazeData();
-                    }
-                    else
-                    {
-                        while (eyeTracker.GazeDataCount > 0)
-                        {
-                            //While there is eye tracking data left in the eyetracker's data queue, add it to the list.
-                            EnqueueGazeData(eyeTracker.NextData);
-                        }
-                    }
-
-                    
-                }
-            }
+            enable = false;
+            Debug.Log("Recorder disabled");
         }
 
-        #endregion
-
-        #region Public methods
-        //Starts the recording
+        /// <summary>
+        /// Starts the recording.
+        /// </summary>
         public void StartRecording()
         {
             //If the recorder is not recording data, and calibration is finished or not required - the recorder will enable recording.
@@ -151,7 +173,9 @@ namespace HMDEyeTracking {
 
         }
 
-        //Handles stopping the recorder.
+        /// <summary>
+        /// Stops/pauses the recording and writes data to file.
+        /// </summary>
         public void StopRecording()
         {
             WriteGazeData();
@@ -159,14 +183,24 @@ namespace HMDEyeTracking {
             Debug.Log("The recording of gaze data has stopped.");
         }
 
+        /// <summary>
+        ///Get whether the recorder is currently recording.
+        /// </summary>
         public bool GetRecording()
         {
             return isRecording;
         }
+
+        /// <summary>
+        ///Get whether the recorder is currently enabled.
+        /// </summary>
+        public bool GetEnable()
+        {
+            return enable;
+        }
         #endregion
 
         #region Private methods
-
         //Adds a gazeData struct to the encoding queue
         private void EnqueueGazeData(IVRGazeData _IVRGazeData)
         {

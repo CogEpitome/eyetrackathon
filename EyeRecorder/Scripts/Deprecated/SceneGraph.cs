@@ -4,7 +4,7 @@ Developer:  #Jonas Iacobi#
 Company:    #KTH#
 Date:       #2018-03-20#
 ========================================================================*/
-
+/*
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
@@ -144,3 +144,4 @@ namespace HMDEyeTracking
     }
 #endif
 }
+*/

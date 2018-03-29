@@ -13,7 +13,6 @@ namespace HMDEyeTracking
 {
     [RequireComponent(typeof(GazeRecorder))]
     [RequireComponent(typeof(GazeReplayer))]
-    [RequireComponent(typeof(GazeDataLoader))]
     [ExecuteInEditMode]
     public class GazeController : MonoBehaviour
     {
@@ -53,7 +52,7 @@ namespace HMDEyeTracking
             //Singleton
             if (instance != null && instance != this)
             {
-                Destroy(gameObject);
+                enabled = false;
                 return;
             }
             instance = this;
@@ -61,7 +60,7 @@ namespace HMDEyeTracking
 
         private void OnEnable()
         {
-            if(activate && !activated)
+            if(activate)
                 Activate();
         }
 
@@ -73,8 +72,42 @@ namespace HMDEyeTracking
                 {
                     activated = false;
                     Debug.Log("lost the gazereplayer, deactivating");
+                    return;
                 }
-                
+
+                if (GazeReplayer.instance.GetEnable())
+                {
+                    if (!replayGaze)
+                    {
+                        GazeReplayer.instance.Disable();
+                        replayingGaze = false;
+                    }
+                } else
+                {
+                    if (replayGaze)
+                    {
+                        Activate();
+                    }
+                }
+
+                if (EditorApplication.isPlaying)
+                {
+                    if (GazeRecorder.instance.GetEnable())
+                    {
+                        if (!recordGaze)
+                        {
+                            GazeRecorder.instance.Disable();
+                            recordingGaze = false;
+                        }
+                    }
+                    else
+                    {
+                        if (recordGaze)
+                        {
+                            Activate();
+                        }
+                    }
+                }
 
                 //Make sure the recorder only starts in play mode.
                 if (EditorApplication.isPlaying)
@@ -139,41 +172,53 @@ namespace HMDEyeTracking
         private void Activate()
         {
             //If there is no gazedataloader, the controller can't operate. Exit.
-            if (GazeDataLoader.instance == null)
+            /*if (GazeDataLoader.instance == null)
             {
                 Debug.Log("Fatal: Could not find a GazeDataLoader instance. Disabling GazeController.");
                 enabled = false;
                 return;
             }
+            else 
+            */
+            GazeDataLoader.LoadGazeData();
 
-            if (GazeReplayer.instance == null && replayGaze)
+            //If the controller is set to enable the replayer, 
+            if (replayGaze)
             {
-                Debug.Log("Could not find a GazeReplayer instance. Disabling replaying of gaze data.");
-                replayGaze = false;
-                replayingGaze = false;
-            }
-            else
-            {
-                replayingGaze = replayGaze;
-                Debug.Log(GazeReplayer.instance.name);
-            }
-
-            if (EditorApplication.isPlaying)
-            {
-                if (GazeRecorder.instance == null && recordGaze)
+                if (GazeReplayer.instance == null)
                 {
-                    Debug.Log("Could not find a GazeRecorder instance. Disabling recording of gaze data.");
-                    recordGaze = false;
-                    recordingGaze = false;
+                    Debug.Log("Could not find a GazeReplayer instance. Disabling replaying of gaze data.");
+                    replayGaze = false;
+                    replayingGaze = false;
                 } else
                 {
-                    recordingGaze = recordGaze;
+                    replayingGaze = replayGaze;
+                    GazeReplayer.instance.Enable();
                 }
-                
+            }
+
+            //If the application is playing and the controller is set to activate the recorder.
+            if (EditorApplication.isPlaying)
+            {
+                if (recordGaze)
+                {
+                    if (GazeRecorder.instance == null)
+                    {
+                        Debug.Log("Could not find a GazeRecorder instance. Disabling recording of gaze data.");
+                        recordGaze = false;
+                        recordingGaze = false;
+                    }
+                    else
+                    {
+                        recordingGaze = recordGaze;
+                        GazeRecorder.instance.Enable();
+                    }
+                }
+                       
             }
         
             //Prepare the data loader by reading data from file for later access.
-            GazeDataLoader.instance.LoadGazeData();
+            GazeDataLoader.LoadGazeData();
 
             //Activation confirmed.
             activated = true;

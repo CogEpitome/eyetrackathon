@@ -16,7 +16,7 @@ namespace HMDEyeTracking
     /// Used to retrieve GazeData objects from the data file. Triggered externally.
     /// </summary>
     [ExecuteInEditMode]
-    public class GazeDataLoader : MonoBehaviour
+    public static class GazeDataLoader
     {
         #region Constants
         //The name of the directory in which data from the recorder will be stored.
@@ -35,18 +35,18 @@ namespace HMDEyeTracking
         #endregion
 
         #region Public fields
-        public static GazeDataLoader instance;
+        //public static GazeDataLoader instance;
 
         [Tooltip("Uncheck to discard data points with invalid point and pupil data. Disable to discard data from time spent with eyes closed or not in VR headset.")]
-        public bool loadInvalid = true;
+        public static bool loadInvalid = true;
         #endregion
 
         #region Private fields
-        private List<Utils.GazeData> gazeDataList;
+        private static List<Utils.GazeData> gazeDataList = new List<Utils.GazeData>();
         #endregion
 
         #region Unity methods
-        private void OnEnable()
+        /*private void Awake()
         {
             //Singleton
             if (instance != null && instance != this)
@@ -57,14 +57,14 @@ namespace HMDEyeTracking
             instance = this;
 
             gazeDataList = new List<Utils.GazeData>();
-        }
+        }*/
         #endregion
 
         #region Public methods
         /// <summary>
         /// Loads all lines from the data text file and converts it to a list of GazeData objects for later use.
         /// </summary>
-        public void LoadGazeData()
+        public static void LoadGazeData()
         {
             string path = Path.Combine(DATA_FILE_DIRECTORY, DATA_FILE_NAME);
 
@@ -102,12 +102,12 @@ namespace HMDEyeTracking
             }
         }
 
-        public List<Utils.GazeData> GetGazeData()
+        public static List<Utils.GazeData> GetGazeData()
         {
             return gazeDataList;
         }
 
-        public Utils.GazeData GetGazeData(int i)
+        public static Utils.GazeData GetGazeData(int i)
         {
             if (gazeDataList.Count > i)
                 return gazeDataList[i];
