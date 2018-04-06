@@ -46,6 +46,8 @@ namespace HMDEyeTracking
         private float pupilSize;
         //Whether to run or not.
         private bool enabled;
+
+        private Canvas canvas;
         #endregion
 
         #region Unity methods
@@ -53,6 +55,7 @@ namespace HMDEyeTracking
         protected void Start()
         {
             pointImage = point.GetComponent<Image>();
+            canvas = GetComponentInChildren<Canvas>();
         }
 
         protected void Update()
@@ -70,9 +73,9 @@ namespace HMDEyeTracking
                 return;
             }
 
-            if (gazeData.valid)
+            if (gazeData.valid && canvas != null)
             {
-                pointPosition = new Vector3((gazeData.point.x - 0.5f) * Screen.width, gazeData.point.y * Screen.height);
+                pointPosition = new Vector3((gazeData.point.x - 0.5f) * canvas.GetComponent<RectTransform>().rect.width, -0.5f * Screen.height + gazeData.point.y * canvas.GetComponent<RectTransform>().rect.height);
             }
 
             if (gazeData.pupilsValid)

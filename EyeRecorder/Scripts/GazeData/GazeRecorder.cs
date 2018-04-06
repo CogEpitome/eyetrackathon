@@ -215,6 +215,8 @@ namespace HMDEyeTracking {
             if (gazeData.valid)
             {
                 gazeViewPortPoint = Utils.GetGazeViewPortPoint(mainCamera, _IVRGazeData);
+                
+                
             }
             gazeData.point = new Vector2(gazeViewPortPoint.x, gazeViewPortPoint.y);
             
@@ -249,7 +251,6 @@ namespace HMDEyeTracking {
             gazeData.objectName = objName;
             gazeData.pupilsValid = Utils.IsPupilDataValid(_IVRGazeData);
             gazeData.pupilsSize = Utils.GetAveragePupilDiameter(_IVRGazeData);
-
             //Add the object to the list of gazedatas.
             gazeDataBuffer.Add(gazeData);
         }

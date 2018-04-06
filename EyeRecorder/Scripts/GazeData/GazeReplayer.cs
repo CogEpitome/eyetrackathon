@@ -383,7 +383,8 @@ namespace HMDEyeTracking {
                     replayTime = GazeReplayer.instance.GetReplayTime();
                     
                 }
-                objectString = GazeReplayer.instance.GetCurrentData().objectName;
+                if(GazeReplayer.instance.GetCurrentData() != null)
+                    objectString = GazeReplayer.instance.GetCurrentData().objectName;
             } else
             {
                 return;
