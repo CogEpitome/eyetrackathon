@@ -284,6 +284,46 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 8eabc06d9a0080442b8a3ea7e15276a1, type: 2}
   m_IsPrefabParent: 0
+--- !u!1 &227127250
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 227127252}
+  - component: {fileID: 227127251}
+  m_Layer: 0
+  m_Name: HMDGazeRecorder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &227127251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 227127250}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f737c66a71ed804788a5d29702c924b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &227127252
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 227127250}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 12
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &334115270
 GameObject:
   m_ObjectHideFlags: 0
@@ -461,27 +501,27 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4953230826180666, guid: 6f177b06cec80eb4d8b8718abbb7e5e1, type: 2}
       propertyPath: m_LocalPosition.x
-      value: -0.044973463
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4953230826180666, guid: 6f177b06cec80eb4d8b8718abbb7e5e1, type: 2}
       propertyPath: m_LocalPosition.y
-      value: 1.4676385
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4953230826180666, guid: 6f177b06cec80eb4d8b8718abbb7e5e1, type: 2}
       propertyPath: m_LocalPosition.z
-      value: 4.799999
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4953230826180666, guid: 6f177b06cec80eb4d8b8718abbb7e5e1, type: 2}
       propertyPath: m_LocalScale.x
-      value: 0.25437775
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4953230826180666, guid: 6f177b06cec80eb4d8b8718abbb7e5e1, type: 2}
       propertyPath: m_LocalScale.y
-      value: 0.25437775
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4953230826180666, guid: 6f177b06cec80eb4d8b8718abbb7e5e1, type: 2}
       propertyPath: m_LocalScale.z
-      value: 0.25437775
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 114444923961532432, guid: 6f177b06cec80eb4d8b8718abbb7e5e1,
         type: 2}
@@ -498,9 +538,46 @@ Prefab:
       propertyPath: gazeIndex
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1512333546277026, guid: 6f177b06cec80eb4d8b8718abbb7e5e1, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 6f177b06cec80eb4d8b8718abbb7e5e1, type: 2}
   m_IsPrefabParent: 0
+--- !u!21 &506699042
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: Sprites/Default
+  m_Shader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _AlphaTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - PixelSnap: 0
+    - _EnableExternalAlpha: 0
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Flip: {r: 1, g: 1, b: 1, a: 1}
+    - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &632382690
 GameObject:
   m_ObjectHideFlags: 0
@@ -799,11 +876,11 @@ Prefab:
     - target: {fileID: 3380982, guid: 4d293c8e162f3874b982baadd71153d2, type: 2}
       propertyPath: m_Mesh
       value: 
-      objectReference: {fileID: 1481187522}
+      objectReference: {fileID: 1406463526}
     - target: {fileID: 2348914, guid: 4d293c8e162f3874b982baadd71153d2, type: 2}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 1563671177}
+      objectReference: {fileID: 506699042}
     - target: {fileID: 146900, guid: 4d293c8e162f3874b982baadd71153d2, type: 2}
       propertyPath: m_IsActive
       value: 1
@@ -1160,7 +1237,7 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: dadfa62ead53ea24988e2bfd46db258f, type: 2}
   m_IsPrefabParent: 0
---- !u!43 &1481187522
+--- !u!43 &1406463526
 Mesh:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
@@ -1288,39 +1365,34 @@ Mesh:
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
   m_MeshOptimized: 0
---- !u!21 &1563671177
-Material:
-  serializedVersion: 6
+--- !u!1 &1593894569
+GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: Sprites/Default
-  m_Shader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
-  m_ShaderKeywords: 
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _AlphaTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Floats:
-    - PixelSnap: 0
-    - _EnableExternalAlpha: 0
-    m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Flip: {r: 1, g: 1, b: 1, a: 1}
-    - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1593894570}
+  m_Layer: 0
+  m_Name: HMDGazeReplayer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1593894570
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1593894569}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 13
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1656032392
 GameObject:
   m_ObjectHideFlags: 0
