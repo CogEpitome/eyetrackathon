@@ -69,7 +69,7 @@ namespace HMDEyeTracking {
         //Reference to the data loader with the list of gaze points.
         //private GazeDataLoader dataLoader;
         //Reference to the gaze plane visualizer.
-        private GazePlaneVisualizer gazePlaneVisualizer;
+        private GazeViewportVisualizer gazeViewportVisualizer;
         //The bool deciding whether the plane visualization is shown. Private to prevent users from changing it during runtime.
         private bool showingPlaneVisualization;
         //Whether the replayer was successfully initialized
@@ -105,9 +105,9 @@ namespace HMDEyeTracking {
                     }
                     UpdateGazeData();
                     UpdateGazeReplayPoint();
-                    if (showingPlaneVisualization)
+                    if (true)//showingPlaneVisualization)
                     {
-                        gazePlaneVisualizer.UpdatePlaneGazePoint(currentData);
+                        gazeViewportVisualizer.UpdateViewportPoint(currentData);
                     }
                     UpdateGazeIndex();
                 }
@@ -265,8 +265,8 @@ namespace HMDEyeTracking {
                 return false;
             }
             gazeStartTime = currentData.timestamp;
-            gazePlaneVisualizer = GetComponent<GazePlaneVisualizer>();
-            if (showingPlaneVisualization && gazePlaneVisualizer == null) showingPlaneVisualization = false;
+            gazeViewportVisualizer = GetComponent<GazeViewportVisualizer>();
+            if (showingPlaneVisualization && gazeViewportVisualizer == null) showingPlaneVisualization = false;
             return true;
         }
 
