@@ -21,17 +21,12 @@ namespace HMDEyeTracking {
     /// If you need to use that data elsewhere, remove all instances of "eyeTracker.NextData" in the Update method
     /// and create a separate script to store them before passing them here.
     /// </summary>
+    /// 
+    /*
     public class GazeRecorder : MonoBehaviour
     {
         #region Constants
-        //The name of the directory in which data from the recorder will be stored.
-        private const string DATA_FILE_DIRECTORY = "EyeRecorderData";
-        //The name of the json file in which data from the recorder will be stored.
-        private const string DATA_FILE_NAME = "data";
-        //The file type of the json file in which data from the recorder will be stored.
-        private const string DATA_FILE_TYPE = ".txt";
-        //The maximum buffer size before force writing to file
-        private const int MAX_BUFFER_SIZE = 500;
+        
         #endregion
 
         #region Classes, Structs and Enumerations
@@ -218,9 +213,7 @@ namespace HMDEyeTracking {
             Vector3 gazeViewPortPoint = Vector3.zero;
             if (gazeData.valid)
             {
-                gazeViewPortPoint = Utils.GetGazeViewPortPoint(mainCamera, _IVRGazeData);
-                
-                
+                gazeViewPortPoint = Utils.GetGazeViewPortPoint(mainCamera, _IVRGazeData);   
             }
             gazeData.point = new Vector2(gazeViewPortPoint.x, gazeViewPortPoint.y);
             
@@ -300,5 +293,5 @@ namespace HMDEyeTracking {
             overwritten = true;
         }
         #endregion
-    }
+    }*/
 }

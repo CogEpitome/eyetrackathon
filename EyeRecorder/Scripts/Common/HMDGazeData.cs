@@ -14,7 +14,7 @@ namespace HMDGazeAnalyzing
      * Can be serialized as JSON for writing to file.
      */
     [System.Serializable]
-    public class HMDGazeData : MonoBehaviour
+    public class HMDGazeData
     {
         #region Public fields
         /// <summary>

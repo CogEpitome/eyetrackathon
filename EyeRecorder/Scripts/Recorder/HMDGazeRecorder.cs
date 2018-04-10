@@ -15,22 +15,18 @@ namespace HMDGazeAnalyzing
     public class HMDGazeRecorder : MonoBehaviour 
     {
         #region Constants
-        //The name of the directory in which the data files are to be stored.
-        private const string DATA_FILE_DIRECTORY = "HMDGazeAnalyzingData";
-        //The name of the data files. Files are then separated by version numbers appended to this name.
-        private const string DATA_FILE_NAME = "gazeRecording";
-        //The file ending, determines the file's type.
-        private const string DATA_FILE_ENDING = ".txt";
-        //The maximum amount of data files allowed to be stored.
-        private const int MAX_DATA_FILE_COUNT = 1000;
         #endregion
 
         #region Public fields
+        /// <summary>
+        /// The HMDGazeReocrder instance.
+        /// </summary>
         public static HMDGazeRecorder instance;
+
         [Tooltip("The camera representing the user's eyes. Corresponds to [CameraRig]->Camera(head)->Camera(eye) in the SteamVR prefab.")]
         public Camera mainCamera;
         [Tooltip("Whether the recorder should raycast to see which object the user looks at. Uncheck to disable collection of object name and distance data. May impact performance.")]
-        public bool raycast;
+        public bool raycast = true;
         [Tooltip("Check this to make the recorder overwrite existing data files.")]
         public bool overwrite;
         [Tooltip("The button used to start and stop recording.")]
@@ -48,6 +44,8 @@ namespace HMDGazeAnalyzing
         private List<HMDGazeData> gazeDataBuffer;
         //Keeps track of the last recorded distance, used to set distance of points with no associated distance data.
         private float lastDistance;
+        //The index of the file currently written to. Reset when recorder starts. If overwrite is disabled, the index will automatically be set to the current file count + 1.
+        private int fileIndex;
 	    #endregion
 
 	    #region Unity methods
@@ -61,7 +59,27 @@ namespace HMDGazeAnalyzing
                 return;
             }
             instance = this;
+
+            //Check that the camera has been assigned.
+            if(mainCamera == null)
+            {
+                Debug.Log("Attention: No camera has been assigned to the recorder. Disabling.");
+                enabled = false;
+            }
         }
+
+        private void Start()
+        {
+            //Create directory and set file index.
+            InitializeFile();
+
+            //Create the gaze data buffer list
+            gazeDataBuffer = new List<HMDGazeData>();
+
+            //Get the eye tracker from the scene.
+            eyeTracker = VREyeTracker.Instance;
+        }
+
 	
 	    private void Update () 
 	    {
@@ -77,60 +95,62 @@ namespace HMDGazeAnalyzing
                 ToggleRecording();
             }
 
-            //The eyetracker will still enqueue data even if it's not used, this removes data not used by the recorder.
-            //ATTENTION: This will remove all data not used by this object. If you want to use the eye tracking data in other objects, please make a class that stores it and then passes it here.
-            if (!record)
+            //Handle the data objects from the eye tracker each frame.
+            while (eyeTracker.GazeDataCount > 0)
             {
-                while (eyeTracker.GazeDataCount > 0)
+                if (record)
                 {
+                    //If we are recording, convert the eyetracking data to gaze data objects and write them to the buffer.
+                    EnqueueGazeData(EncodeGazeData(eyeTracker.NextData));
+                } else
+                {
+                    //The eyetracker will still enqueue data even if it's not used, this removes data not used by the recorder.
+                    //ATTENTION: This will remove all data not used by this object. If you want to use the eye tracking data in other objects, please make a class that stores it and then passes it here.
                     var discardMe = eyeTracker.NextData;
                 }
-                return;
             }
 
-            //If we are recording, convert the eyetracking data to gaze data objects and write them to the buffer.
-            if (record)
-            {
-                //Record data
-                while(eyeTracker.GazeDataCount > 0)
-                {
-                    EnqueueGazeData(EncodeGazeData(eyeTracker.NextData));     
-                }
-                //Move this to a separate place for performance reasons.
-                WriteGazeData(OpenFile());
-            } 
 	    }
 
         #endregion
 
         #region Public methods
+
+        /// <summary>
+        /// Toggle the recording of gaze data on and off. Toggling off will automatically write data to file.
+        /// </summary>
+        private void ToggleRecording()
+        {
+            record = !record;
+            Debug.Log("HMDGazeRecorder recording is set to " + record);
+            //Write data to file when the recording is stopped. Restarting it will create a new data file.
+            if (!record)
+            {
+                WriteGazeData(GetFileName());
+            }
+        }
         #endregion
 
         #region Private methods
 
         #region Recording methods
-        //toggle the recording on or off.
-        private void ToggleRecording()
-        {
-            record = !record;
-        }
 
         //Turn a data object from the eye tracker into a custom gaze tracker object, ready to be serialized.
-        private HMDGazeData EncodeGazeData(IVRGazeData igd)
+        private HMDGazeData EncodeGazeData(IVRGazeData _IVRGazeData)
         {
-            if(igd == null)
+            if(_IVRGazeData == null)
             {
                 return null;
             }
 
             HMDGazeData gazeData = new HMDGazeData();
-            gazeData.valid = igd.CombinedGazeRayWorldValid;
+            gazeData.valid = _IVRGazeData.CombinedGazeRayWorldValid;
             gazeData.timestamp = Time.time;
 
             Vector3 viewportPoint = Vector3.zero;
             if (gazeData.valid)
             {
-                viewportPoint = Utils.GazeToViewportPoint(mainCamera, igd.CombinedGazeRayWorld.direction);
+                viewportPoint = GazeToViewportPoint(mainCamera, _IVRGazeData.CombinedGazeRayWorld.direction);
             }
 
             string objectName = "None";
@@ -138,7 +158,7 @@ namespace HMDGazeAnalyzing
             if (raycast)
             {
                 RaycastHit hit;
-                if (Physics.Raycast(igd.CombinedGazeRayWorld, out hit))
+                if (Physics.Raycast(_IVRGazeData.CombinedGazeRayWorld, out hit))
                 {
                     distance = hit.distance;
                     lastDistance = distance;
@@ -154,12 +174,13 @@ namespace HMDGazeAnalyzing
                 objectName = "Not Tracked";
             }
 
+            gazeData.viewPortPoint = viewportPoint;
             gazeData.distance = distance;
-            gazeData.origin = igd.CombinedGazeRayWorld.origin;
-            gazeData.direction = igd.CombinedGazeRayWorld.direction;
+            gazeData.origin = _IVRGazeData.CombinedGazeRayWorld.origin;
+            gazeData.direction = _IVRGazeData.CombinedGazeRayWorld.direction;
             gazeData.objectName = objectName;
-            gazeData.pupilsValid = IsPupilDataValid(igd);
-            gazeData.pupilSize = AveragePupilDiameter(igd);
+            gazeData.pupilsValid = IsPupilDataValid(_IVRGazeData);
+            gazeData.pupilSize = AveragePupilDiameter(_IVRGazeData);
 
             return gazeData;
         }
@@ -167,7 +188,17 @@ namespace HMDGazeAnalyzing
         //Adds the gaze data to the list.
         private void EnqueueGazeData(HMDGazeData gazeData)
         {
-            gazeDataBuffer.Add(gazeData);
+            if (gazeData != null)
+            {
+                gazeDataBuffer.Add(gazeData);
+            }
+        }
+
+
+        // Returns a point on the viewport corrsponding to the supplied camera and direction vector.
+        private Vector3 GazeToViewportPoint(Camera mainCamera, Vector3 direction)
+        {
+            return mainCamera.WorldToViewportPoint(direction);
         }
 
         //Return whether the pupil data is valid.
@@ -187,40 +218,67 @@ namespace HMDGazeAnalyzing
         //Writes the data buffer to file and clears the list.
         private void WriteGazeData(string fileName)
         {
-            using (StreamWriter file = File.AppendText(Path.Combine(DATA_FILE_DIRECTORY, fileName))){
+            //If the file is to be overwritten, delete it first.
+            if(overwrite && File.Exists(Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, fileName)))
+            {
+                File.Delete(Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, fileName));
+            }
+
+            using (StreamWriter file = File.AppendText(Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, fileName))){
                 for(int i = 0; i < gazeDataBuffer.Count; i++)
                 {
                     file.WriteLine(JsonUtility.ToJson(gazeDataBuffer[i]));
                 }
                 gazeDataBuffer.Clear();
 
+                //If the write was successful, incement the file index.
+                if (fileIndex < HMDDataSettings.MAX_DATA_FILE_COUNT)
+                {
+                    fileIndex++;
+                }
+                else
+                {
+                    Debug.Log("There are more than " + HMDDataSettings.MAX_DATA_FILE_COUNT + " data files in the " + HMDDataSettings.DATA_FILE_DIRECTORY + "directory. The Recorder will not create more. Please remove some of the existing data files, or change the MAX_DATA_FILE_COUNT const in the Recorder.");
+                }
+
                 file.Flush();
                 file.Close();
             }
         }
 
-        //Prepares a data file and returns its name.
-        private string OpenFile()
+        //Creates the data file directory and sets the file index.
+        private void InitializeFile()
         {
-            if (!Directory.Exists(DATA_FILE_DIRECTORY))
+            if (!Directory.Exists(HMDDataSettings.DATA_FILE_DIRECTORY))
             {
-                Directory.CreateDirectory(DATA_FILE_DIRECTORY);
+                Directory.CreateDirectory(HMDDataSettings.DATA_FILE_DIRECTORY);
             }
 
-            string name = DATA_FILE_NAME + DATA_FILE_ENDING;
-            int i = 0;
-            while(File.Exists(Path.Combine(DATA_FILE_DIRECTORY, name)))
+            if (!overwrite && File.Exists(Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, HMDDataSettings.DATA_FILE_NAME + HMDDataSettings.DATA_FILE_ENDING)))
             {
-                name = DATA_FILE_NAME + "(" + i + ")" + DATA_FILE_ENDING;
-
-                if (i < MAX_DATA_FILE_COUNT)
+                fileIndex = 1;
+                while (File.Exists(Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, HMDDataSettings.DATA_FILE_NAME + "(" + fileIndex + ")" + HMDDataSettings.DATA_FILE_ENDING)))
                 {
-                    i++;
-                } else
-                {
-                    Debug.Log("There are more than " + MAX_DATA_FILE_COUNT + " data files in the " + DATA_FILE_DIRECTORY + "directory. The Recorder will not create more. Please remove some of the existing data files, or change the MAX_DATA_FILE_COUNT const in the Recorder.");
-                    return null;
+                    fileIndex++;
                 }
+            } else
+            {
+                fileIndex = 0;
+            }
+        }
+
+        //Returns a file name for the next data file.
+        private string GetFileName()
+        {
+            string name;
+
+            if (fileIndex == 0)
+            {
+                name = HMDDataSettings.DATA_FILE_NAME + HMDDataSettings.DATA_FILE_ENDING;
+            }
+            else
+            {
+                name = HMDDataSettings.DATA_FILE_NAME + "(" + fileIndex + ")" + HMDDataSettings.DATA_FILE_ENDING;
             }
 
             return name;
