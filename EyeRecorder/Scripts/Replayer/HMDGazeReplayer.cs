@@ -166,6 +166,15 @@ namespace HMDGazeAnalyzing {
                     UpdateGazeIndex();
                 }
             }
+            else
+            {
+                if (gazeReplayPointMeshRenderer.enabled)
+                {
+                    gazeReplayPointMeshRenderer.enabled = false;
+                }
+
+
+            }
         }
 
         #endregion
@@ -348,8 +357,6 @@ namespace HMDGazeAnalyzing {
                     if (currentData.valid)
                     {
                         pointPosition = new Vector2((currentData.viewPortPoint.x - 0.5f) * Screen.width, currentData.viewPortPoint.y * canvas.GetComponent<RectTransform>().rect.height);
-                        // canvas.GetComponent<RectTransform>().rect.width,0);// (currentData.viewPortPoint.y * canvas.GetComponent<RectTransform>().rect.height));
-                        //pointPosition = new Vector2((currentData.viewPortPoint.x - 0.5f) * canvas.GetComponent<RectTransform>().rect.width, -0.5f * Screen.height + currentData.viewPortPoint.y * canvas.GetComponent<RectTransform>().rect.height);
                     }
 
                     //Set pupil size and blink color.
@@ -362,8 +369,9 @@ namespace HMDGazeAnalyzing {
                         pointImage.color = pointColorBlink;
                     }
 
-                    //Set the position of the point.
+                    //Set the position and scale of the point.
                     point.localPosition = new Vector3(pointPosition.x, pointPosition.y, 20f);
+                    point.localScale = Vector3.one * pupilSize;
                 }
             }
         }

@@ -27,7 +27,8 @@ namespace HMDGazeAnalyzing {
         /// The HMDDataLoader instance.
         /// </summary>
         public static HMDDataLoader instance;
-
+        [Tooltip("The name of the file to load from. Exclude directory and file ending.")]
+        public string customFileName;
         [Tooltip("Uncheck to discard data points with invalid point and pupil data. Disable to discard data from time spent with eyes closed or not in VR headset.")]
         public bool loadInvalid = true;
         #endregion
@@ -37,6 +38,8 @@ namespace HMDGazeAnalyzing {
         private List<HMDGazeData> dataList;
         //Keeps track of how many invalid data objects were loaded.
         private int invalidDataCount;
+        //The name of the file to load.
+        private string fileName;
         #endregion
 
         #region Unity methods
@@ -53,6 +56,7 @@ namespace HMDGazeAnalyzing {
 
             dataList = new List<HMDGazeData>();
             invalidDataCount = 0;
+            SetFileName();
         }
 
 
@@ -65,13 +69,22 @@ namespace HMDGazeAnalyzing {
         /// <returns></returns>
         public bool DataFileExists(int index)
         {
+            return DataFileExists(fileName, index);
+        }
+
+        /// <summary>
+        /// Check if a data file with the specified name and index exists.
+        /// </summary>
+        /// <returns></returns>
+        public bool DataFileExists(string fName, int index)
+        {
             if (index == 0)
             {
-                return File.Exists(Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, HMDDataSettings.DATA_FILE_NAME + HMDDataSettings.DATA_FILE_ENDING));
+                return File.Exists(Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, fName + HMDDataSettings.DATA_FILE_ENDING));
             }
             else
             {
-                return File.Exists(Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, HMDDataSettings.DATA_FILE_NAME + "(" + index + ")" + HMDDataSettings.DATA_FILE_ENDING));
+                return File.Exists(Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, fName + "(" + index + ")" + HMDDataSettings.DATA_FILE_ENDING));
             }
         }
 
@@ -81,7 +94,7 @@ namespace HMDGazeAnalyzing {
         public void LoadAllData()
         {
             int fileIndex = 0;
-            while (File.Exists(Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, HMDDataSettings.DATA_FILE_NAME + HMDDataSettings.DATA_FILE_ENDING)))
+            while (File.Exists(Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, fileName + HMDDataSettings.DATA_FILE_ENDING)))
             {
                 LoadData(fileIndex, true);
                 fileIndex++;
@@ -119,18 +132,27 @@ namespace HMDGazeAnalyzing {
 
         #region Private methods
 
+        
+
+        private void SetFileName()
+        {
+            fileName = !string.IsNullOrEmpty(customFileName) ? customFileName : HMDDataSettings.DATA_FILE_NAME;
+        }
+
         //Load the gaze data from recording with index fileIndex.Set append to true if reading from several data files.
         private void LoadData(int fileIndex, bool append)
         {
+            SetFileName();
+
             //Set the file path.
             string path;
             if (fileIndex == 0)
             {
-                path = Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, HMDDataSettings.DATA_FILE_NAME + HMDDataSettings.DATA_FILE_ENDING);
+                path = Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, fileName + HMDDataSettings.DATA_FILE_ENDING);
             }
             else
             {
-                path = Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, HMDDataSettings.DATA_FILE_NAME + "(" + fileIndex + ")" + HMDDataSettings.DATA_FILE_ENDING);
+                path = Path.Combine(HMDDataSettings.DATA_FILE_DIRECTORY, fileName + "(" + fileIndex + ")" + HMDDataSettings.DATA_FILE_ENDING);
             }
 
             //Check that the file exists.
